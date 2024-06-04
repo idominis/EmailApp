@@ -1,0 +1,37 @@
+﻿@page "/email-history"
+@using EmailApp.Models
+@using EmailApp.Services
+@inject IEmailService EmailService
+
+<h3>Email History</h3>
+
+@if (emails == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <ul>
+        @foreach (var email in emails)
+        {
+            <li>
+                <strong>From:</strong> @email.FromEmail<br />
+                <strong>To:</strong> @email.ToEmail<br />
+                <strong>CC:</strong> @email.CcEmails<br />
+                <strong>Subject:</strong> @email.Subject<br />
+                <strong>Importance:</strong> @email.Importance<br />
+                <strong>Content:</strong> @email.Content<br />
+                <strong>Created:</strong> @email.Created<br />
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Email> emails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        emails = await EmailService.GetEmailsAsync();
+    }
+}

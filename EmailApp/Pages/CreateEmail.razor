@@ -1,0 +1,68 @@
+﻿@page "/create-email"
+@inject IEmailService EmailService
+@using System.ComponentModel.DataAnnotations
+@using EmailApp.Models
+@using EmailApp.Services
+@inject IJSRuntime JSRuntime
+
+<h3>Create New Email</h3>
+
+<EditForm Model="@email" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>From:</label>
+        <InputText @bind-Value="email.FromEmail" />
+        <ValidationMessage For="@(() => email.FromEmail)" />
+    </div>
+    <div>
+        <label>To:</label>
+        <InputText @bind-Value="email.ToEmail" />
+        <ValidationMessage For="@(() => email.ToEmail)" />
+    </div>
+    <div>
+        <label>CC:</label>
+        <InputText @bind-Value="email.CcEmails" />
+    </div>
+    <div>
+        <label>Subject:</label>
+        <InputText @bind-Value="email.Subject" />
+        <ValidationMessage For="@(() => email.Subject)" />
+    </div>
+    <div>
+        <label>Importance:</label>
+        <InputSelect @bind-Value="email.Importance">
+            <option value="Low">Low</option>
+            <option value="Normal">Normal</option>
+            <option value="High">High</option>
+        </InputSelect>
+    </div>
+    <div>
+        <label>Content:</label>
+        <InputTextArea @bind-Value="email.Content" />
+        <ValidationMessage For="@(() => email.Content)" />
+    </div>
+
+    <button type="submit">Send</button>
+    <button type="button" @onclick="HandleCancel">Cancel</button>
+</EditForm>
+
+@code {
+    private Email email = new Email();
+
+    private async Task HandleValidSubmit()
+    {
+        await EmailService.CreateEmailAsync(email);
+        // Handle success (e.g., show a message or redirect)
+    }
+
+    private async Task HandleCancel()
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirmCancel", "Are you sure you want to cancel?");
+        if (confirmed)
+        {
+            email = new Email();
+        }
+    }
+}
