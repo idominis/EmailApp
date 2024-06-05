@@ -2,8 +2,8 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using EmailApp.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmailApp.Data;
 
@@ -26,10 +26,15 @@ public partial class LocalDbContext : DbContext
             entity.Property(e => e.Content)
                 .IsRequired()
                 .HasColumnType("ntext");
-            entity.Property(e => e.Created).HasColumnType("datetime");
+            entity.Property(e => e.CreatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("CreatedDate ");
             entity.Property(e => e.FromEmail)
                 .IsRequired()
                 .HasMaxLength(255);
+            entity.Property(e => e.Importance)
+                .IsRequired()
+                .HasMaxLength(50);
             entity.Property(e => e.Subject)
                 .IsRequired()
                 .HasMaxLength(255);

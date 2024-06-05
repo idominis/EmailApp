@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace EmailApp.Models;
 
@@ -9,17 +10,22 @@ public partial class Email
 {
     public int EmailId { get; set; }
 
+    [Required, EmailAddress]
     public string FromEmail { get; set; }
 
+    [Required, EmailAddress]
     public string ToEmail { get; set; }
 
     public string CcEmails { get; set; }
 
+    [Required]
     public string Subject { get; set; }
 
-    public byte Importance { get; set; }
+    [Required]
+    public string Importance { get; set; } = "Normal";
 
+    [Required]
     public string Content { get; set; }
 
-    public DateTime Created { get; set; }
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 }

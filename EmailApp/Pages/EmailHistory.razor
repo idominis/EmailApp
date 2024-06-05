@@ -7,24 +7,35 @@
 
 @if (emails == null)
 {
-    <p>Loading...</p>
+    <div class="alert alert-info" role="alert">
+        Loading...
+    </div>
+}
+else if (emails.Count == 0)
+{
+    <div class="alert alert-warning" role="alert">
+        No emails found.
+    </div>
 }
 else
 {
-    <ul>
+    <div class="list-group">
         @foreach (var email in emails)
         {
-            <li>
-                <strong>From:</strong> @email.FromEmail<br />
-                <strong>To:</strong> @email.ToEmail<br />
-                <strong>CC:</strong> @email.CcEmails<br />
-                <strong>Subject:</strong> @email.Subject<br />
-                <strong>Importance:</strong> @email.Importance<br />
-                <strong>Content:</strong> @email.Content<br />
-                <strong>Created:</strong> @email.Created<br />
-            </li>
+            <div class="list-group-item">
+                <h5 class="mb-1">Subject: @email.Subject</h5>
+                <p class="mb-1"><strong>From:</strong> @email.FromEmail</p>
+                <p class="mb-1"><strong>To:</strong> @email.ToEmail</p>
+                @if (!string.IsNullOrEmpty(email.CcEmails))
+                {
+                    <p class="mb-1"><strong>CC:</strong> @email.CcEmails</p>
+                }
+                <p class="mb-1"><strong>Importance:</strong> @email.Importance</p>
+                <p class="mb-1"><strong>Content:</strong> @email.Content</p>
+                <small class="text-muted">Created: @email.CreatedDate</small>
+            </div>
         }
-    </ul>
+    </div>
 }
 
 @code {
