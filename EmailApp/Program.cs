@@ -13,7 +13,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-builder.Services.AddDbContext<LocalDbContext>(options =>
+builder.Services.AddDbContext<EmailDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));

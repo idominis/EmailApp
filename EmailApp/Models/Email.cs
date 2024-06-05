@@ -15,7 +15,8 @@ public partial class Email
     [CustomEmail]
     public string FromEmail { get; set; }
 
-    [Required, EmailAddress]
+    [Required]
+    [CustomEmail]
     public string ToEmail { get; set; }
 
     [MultipleEmailAddresses]
@@ -32,5 +33,5 @@ public partial class Email
     [StringLength(1000, ErrorMessage = "Content length can't be more than 1000 characters.")]
     public string Content { get; set; }
 
-    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedDate { get; set; }
 }

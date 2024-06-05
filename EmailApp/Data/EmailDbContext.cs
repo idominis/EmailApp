@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EmailApp.Data;
 
-public partial class LocalDbContext : DbContext
+public partial class EmailDbContext : DbContext
 {
-    public LocalDbContext(DbContextOptions<LocalDbContext> options)
+    public EmailDbContext(DbContextOptions<EmailDbContext> options)
         : base(options)
     {
     }

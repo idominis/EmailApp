@@ -1,5 +1,4 @@
-﻿@page "/pagination"
-@using Microsoft.AspNetCore.Components
+﻿@using Microsoft.AspNetCore.Components
 
 @if (TotalPages > 1)
 {
@@ -35,11 +34,10 @@
 
     private async Task SetPage(int pageNumber)
     {
-        if (pageNumber > 0 && pageNumber <= TotalPages)
+        if (pageNumber != CurrentPage && pageNumber > 0 && pageNumber <= TotalPages)
         {
             CurrentPage = pageNumber;
             await OnPageChanged.InvokeAsync(pageNumber);
         }
     }
-
 }
