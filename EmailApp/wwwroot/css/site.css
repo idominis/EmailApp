@@ -62,3 +62,36 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+.navbar-blue {
+    background: linear-gradient(to bottom, #007bff, #80d4ff);
+    height: 100vh;
+    width: 50px;
+    color: white;
+}
+
+    .navbar-blue .nav-link {
+        font-size: 1.25rem;
+        color: white;
+        padding: 20px 15px;
+    }
+
+        .navbar-blue .nav-link:hover {
+            color: #e0e0e0;
+        }
+
+    .navbar-blue .btn {
+        width: 100%; /* Make buttons full width */
+    }
+
+    .navbar-blue .btn-primary {
+        margin-bottom: 10px;
+    }
+
+header.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+header .navbar-brand {
+    font-size: 4.5rem; /* Increase font size */
+}

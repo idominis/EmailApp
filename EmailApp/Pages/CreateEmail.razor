@@ -60,10 +60,31 @@
     <div class="form-group row">
         <div class="col-sm-10 offset-sm-2">
             <button type="submit" class="btn btn-primary">Send</button>
-            <button type="button" class="btn btn-secondary" @onclick="HandleCancel">Cancel</button>
+            <button type="button" class="btn btn-secondary" @onclick="ShowCancelModal">Cancel</button>
         </div>
     </div>
 </EditForm>
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" role="dialog" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Confirm Cancel</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="HideCancelModal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to cancel?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="HideCancelModal">No</button>
+                <button type="button" class="btn btn-primary" @onclick="HandleConfirmCancel">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
     private Email email = new Email();
@@ -74,12 +95,23 @@
         Navigation.NavigateTo("/email-history");
     }
 
-    private async Task HandleCancel()
+    private void ShowCancelModal()
     {
-        var confirmed = await JSRuntime.InvokeAsync<bool>("confirmCancel", "Are you sure you want to cancel?");
-        if (confirmed)
-        {
-            email = new Email();
-        }
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('cancelModal').classList.add('show')");
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('cancelModal').style.display = 'block'");
+        JSRuntime.InvokeVoidAsync("eval", "document.body.classList.add('modal-open')");
+    }
+
+    private void HideCancelModal()
+    {
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('cancelModal').classList.remove('show')");
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('cancelModal').style.display = 'none'");
+        JSRuntime.InvokeVoidAsync("eval", "document.body.classList.remove('modal-open')");
+    }
+
+    private void HandleConfirmCancel()
+    {
+        email = new Email();
+        HideCancelModal();
     }
 }
