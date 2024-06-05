@@ -4,15 +4,15 @@
 </nav>
 
 @code {
-    [Inject] NavigationManager Navigation { get; set; }
+    [Inject] NavigationManager? Navigation { get; set; }
 
     private void NavigateToCreateEmail()
     {
-        Navigation.NavigateTo("/create-email");
+        Navigation?.NavigateTo("/create-email");
     }
 
     private void NavigateToEmailHistory()
     {
-        Navigation.NavigateTo("/email-history");
+        Navigation?.NavigateTo("/email-history");
     }
 }

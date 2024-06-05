@@ -6,14 +6,20 @@ namespace EmailApp.Validation
 {
     public class MultipleEmailAddressesAttribute : ValidationAttribute
     {
-        public override bool IsValid(object value)
+        public override bool IsValid(object? value)
         {
             if (value == null)
             {
                 return true; // Consider null as valid; use [Required] for mandatory fields
             }
 
-            var emails = value.ToString().Split(',');
+            var valueString = value.ToString();
+            if (valueString == null)
+            {
+                return false;
+            }
+
+            var emails = valueString.Split(',');
             var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$"); // Simplified regex for example
 
             foreach (var email in emails)
@@ -26,6 +32,7 @@ namespace EmailApp.Validation
 
             return true;
         }
+
 
         public override string FormatErrorMessage(string name)
         {

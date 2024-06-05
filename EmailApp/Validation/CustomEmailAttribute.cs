@@ -6,14 +6,14 @@ namespace EmailApp.Validation
 {
     public class CustomEmailAttribute : ValidationAttribute
     {
-        public override bool IsValid(object value)
+        public override bool IsValid(object? value)
         {
-            if (value == null)
+            var email = value as string;
+            if (string.IsNullOrEmpty(email))
             {
-                return true; // Consider null as valid; use [Required] for mandatory fields
+                return false; // Consider null or empty string as invalid use [Required] for mandatory field
             }
 
-            var email = value.ToString();
             // More comprehensive email regex pattern
             var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
 

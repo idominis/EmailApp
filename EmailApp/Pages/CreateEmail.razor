@@ -98,11 +98,11 @@
 
 @code {
     private Email email = new Email();
-    private string additionalError;
+    private string? additionalError;
 
     // Inject IOptions<EmailSettings>
     [Inject]
-    private IOptions<EmailSettings> EmailSettings { get; set; }
+    private IOptions<EmailSettings>? EmailSettings { get; set; }
 
     private async Task HandleValidSubmit()
     {
@@ -134,14 +134,19 @@
 
     private bool IsValidDomain(string email)
     {
-        var allowedDomains = EmailSettings.Value.AllowedDomains;
+        var allowedDomains = EmailSettings?.Value.AllowedDomains;
         var domain = email.Split('@')[1];
-        return allowedDomains.Contains(domain);
+        return allowedDomains?.Contains(domain) ?? default;
     }
 
     private bool ContainsBlacklistedWords(string text)
     {
-        var blacklistedWords = EmailSettings.Value.BlacklistedWords;
+        var blacklistedWords = EmailSettings?.Value.BlacklistedWords;
+        if (blacklistedWords == null)
+        {
+            return false; // If there are no blacklisted words, return false
+        }
+
         return blacklistedWords.Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
     }
 

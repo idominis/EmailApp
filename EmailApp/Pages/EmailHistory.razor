@@ -21,15 +21,18 @@ else if (emails.Count == 0)
 }
 else
 {
-    <div class="list-group">
-        @foreach (var email in paginatedEmails)
-        {
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <span>Subject: @email.Subject</span>
-                <button class="btn btn-primary btn-sm" @onclick="() => ShowEmailDetails(email)">Show More</button>
-            </div>
-        }
-    </div>
+    if (paginatedEmails != null)
+    {
+        <div class="list-group">
+            @foreach (var email in paginatedEmails)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Subject: @email.Subject</span>
+                    <button class="btn btn-primary btn-sm" @onclick="() => ShowEmailDetails(email)">Show More</button>
+                </div>
+            }
+        </div>
+    }
     <Pagination TotalItems="emails.Count" ItemsPerPage="ItemsPerPage" CurrentPage="CurrentPage" OnPageChanged="OnPageChanged" />
 }
 
@@ -66,22 +69,21 @@ else
 </div>
 
 @code {
-    private List<Email> emails;
-    private List<Email> paginatedEmails;
-    private Email selectedEmail;
+    private List<Email>? emails;
+    private List<Email>? paginatedEmails;
+    private Email? selectedEmail;
     private int CurrentPage = 1;
     private int ItemsPerPage;
 
     [Parameter]
     public int? PageNumber { get; set; }
 
-    // Inject IOptions<EmailSettings>
     [Inject]
-    private IOptions<EmailSettings> EmailSettings { get; set; }
+    private IOptions<EmailSettings>? EmailSettings { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
-        ItemsPerPage = EmailSettings.Value.ItemsPerPage;
+        ItemsPerPage = EmailSettings?.Value.ItemsPerPage ?? default;
 
         if (PageNumber.HasValue)
         {
@@ -98,7 +100,7 @@ else
 
     private void PaginateEmails()
     {
-        paginatedEmails = emails.Skip((CurrentPage - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
+        paginatedEmails = emails?.Skip((CurrentPage - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
     }
 
     private async Task ShowEmailDetails(Email email)
