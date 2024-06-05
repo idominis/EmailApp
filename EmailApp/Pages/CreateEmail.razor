@@ -12,6 +12,13 @@
     <DataAnnotationsValidator />
     <ValidationSummary class="alert alert-danger" />
 
+    @if (!string.IsNullOrEmpty(additionalError))
+    {
+        <div class="alert alert-danger">
+            @additionalError
+        </div>
+    }
+
     <div class="form-group row">
         <label for="fromEmail" class="col-sm-2 col-form-label">From:</label>
         <div class="col-sm-10">
@@ -29,7 +36,8 @@
     <div class="form-group row">
         <label for="ccEmails" class="col-sm-2 col-form-label">CC:</label>
         <div class="col-sm-10">
-            <InputText id="ccEmails" class="form-control" @bind-Value="email.CcEmails" />
+            <InputText id="ccEmails" class="form-control" @bind-Value="email.CcEmails" placeholder="Separate emails with a comma" />
+            <ValidationMessage For="@(() => email.CcEmails)" class="text-danger" />
         </div>
     </div>
     <div class="form-group row">
@@ -47,6 +55,7 @@
                 <option value="Normal">Normal</option>
                 <option value="High">High</option>
             </InputSelect>
+            <ValidationMessage For="@(() => email.Importance)" class="text-danger" />
         </div>
     </div>
     <div class="form-group row">
@@ -88,11 +97,59 @@
 
 @code {
     private Email email = new Email();
+    private string additionalError;
 
     private async Task HandleValidSubmit()
     {
+        // Clear previous errors
+        additionalError = null;
+
+        // Additional validations
+        if (!IsValidDomain(email.FromEmail) || !IsValidDomain(email.ToEmail))
+        {
+            additionalError = "Invalid domain in email address.";
+            return;
+        }
+
+        if (ContainsBlacklistedWords(email.Subject) || ContainsBlacklistedWords(email.Content))
+        {
+            additionalError = "The email contains prohibited words.";
+            return;
+        }
+
+        if (HasDuplicateEmails(email.FromEmail, email.ToEmail, email.CcEmails))
+        {
+            additionalError = "The same email address cannot be used in From, To, or CC fields.";
+            return;
+        }
+
         await EmailService.CreateEmailAsync(email);
         Navigation.NavigateTo("/email-history");
+    }
+
+    private bool IsValidDomain(string email)
+    {
+        var allowedDomains = new[] { "example.com", "anotherdomain.com" }; // Add allowed domains here
+        var domain = email.Split('@')[1];
+        return allowedDomains.Contains(domain);
+    }
+
+    private bool ContainsBlacklistedWords(string text)
+    {
+        var blacklistedWords = new[] { "spam", "phishing", "banned" }; // Add blacklisted words here
+        return blacklistedWords.Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool HasDuplicateEmails(string from, string to, string cc)
+    {
+        var emailAddresses = new List<string> { from, to };
+        if (!string.IsNullOrEmpty(cc))
+        {
+            emailAddresses.AddRange(cc.Split(',').Select(email => email.Trim()));
+        }
+
+        var distinctEmails = emailAddresses.Distinct().ToList();
+        return distinctEmails.Count != emailAddresses.Count;
     }
 
     private void ShowCancelModal()
