@@ -1,0 +1,184 @@
+﻿@page "/create-email"
+@inject IEmailService EmailService
+@using System.ComponentModel.DataAnnotations
+@using EmailApp.Models
+@using EmailApp.Services
+@using Microsoft.Extensions.Options
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+<h3>Create New Email</h3>
+
+<EditForm Model="@email" OnValidSubmit="@HandleValidSubmit" class="form-horizontal">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="alert alert-danger" />
+
+    @if (!string.IsNullOrEmpty(additionalError))
+    {
+        <div class="alert alert-danger">
+            @additionalError
+        </div>
+    }
+
+    <div class="form-group row">
+        <label for="fromEmail" class="col-sm-2 col-form-label">From:</label>
+        <div class="col-sm-10">
+            <InputText id="fromEmail" class="form-control" @bind-Value="email.FromEmail" />
+            <ValidationMessage For="@(() => email.FromEmail)" class="text-danger" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="toEmail" class="col-sm-2 col-form-label">To:</label>
+        <div class="col-sm-10">
+            <InputText id="toEmail" class="form-control" @bind-Value="email.ToEmail" />
+            <ValidationMessage For="@(() => email.ToEmail)" class="text-danger" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="ccEmails" class="col-sm-2 col-form-label">CC:</label>
+        <div class="col-sm-10">
+            <InputText id="ccEmails" class="form-control" @bind-Value="email.CcEmails" placeholder="Separate emails with a comma" />
+            <ValidationMessage For="@(() => email.CcEmails)" class="text-danger" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="subject" class="col-sm-2 col-form-label">Subject:</label>
+        <div class="col-sm-10">
+            <InputText id="subject" class="form-control" @bind-Value="email.Subject" />
+            <ValidationMessage For="@(() => email.Subject)" class="text-danger" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="importance" class="col-sm-2 col-form-label">Importance:</label>
+        <div class="col-sm-10">
+            <InputSelect id="importance" class="form-control" @bind-Value="email.Importance">
+                <option value="Low">Low</option>
+                <option value="Normal">Normal</option>
+                <option value="High">High</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => email.Importance)" class="text-danger" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="content" class="col-sm-2 col-form-label">Content:</label>
+        <div class="col-sm-10">
+            <InputTextArea id="content" class="form-control" @bind-Value="email.Content"></InputTextArea>
+            <ValidationMessage For="@(() => email.Content)" class="text-danger" />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-10 offset-sm-2">
+            <button type="submit" class="btn btn-primary">Send</button>
+            <button type="button" class="btn btn-secondary" @onclick="ShowCancelModal">Cancel</button>
+        </div>
+    </div>
+</EditForm>
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" role="dialog" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Confirm Cancel</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="HideCancelModal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to cancel?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="HideCancelModal">No</button>
+                <button type="button" class="btn btn-primary" @onclick="HandleConfirmCancel">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Email email = new Email();
+    private string? additionalError;
+
+    // Inject IOptions<EmailSettings>
+    [Inject]
+    private IOptions<EmailSettings>? EmailSettings { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        // Clear previous errors
+        additionalError = null;
+
+        // Additional validations
+        if (!IsValidDomain(email.FromEmail) || !IsValidDomain(email.ToEmail))
+        {
+            additionalError = "Invalid domain in email address.";
+            return;
+        }
+
+        if (ContainsBlacklistedWords(email.Subject) || ContainsBlacklistedWords(email.Content))
+        {
+            additionalError = "The email contains prohibited words.";
+            return;
+        }
+
+        if (HasDuplicateEmails(email.FromEmail, email.ToEmail, email.CcEmails))
+        {
+            additionalError = "The same email address cannot be used in From, To, or CC fields.";
+            return;
+        }
+
+        await EmailService.CreateEmailAsync(email);
+        Navigation.NavigateTo("/email-history");
+    }
+
+    private bool IsValidDomain(string email)
+    {
+        var allowedDomains = EmailSettings?.Value.AllowedDomains;
+        var domain = email.Split('@')[1];
+        return allowedDomains?.Contains(domain) ?? default;
+    }
+
+    private bool ContainsBlacklistedWords(string text)
+    {
+        var blacklistedWords = EmailSettings?.Value.BlacklistedWords;
+        if (blacklistedWords == null)
+        {
+            return false; // If there are no blacklisted words, return false
+        }
+
+        return blacklistedWords.Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool HasDuplicateEmails(string from, string to, string cc)
+    {
+        var emailAddresses = new List<string> { from, to };
+        if (!string.IsNullOrEmpty(cc))
+        {
+            emailAddresses.AddRange(cc.Split(',').Select(email => email.Trim()));
+        }
+
+        var distinctEmails = emailAddresses.Distinct().ToList();
+        return distinctEmails.Count != emailAddresses.Count;
+    }
+
+    private void ShowCancelModal()
+    {
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('cancelModal').classList.add('show')");
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('cancelModal').style.display = 'block'");
+        JSRuntime.InvokeVoidAsync("eval", "document.body.classList.add('modal-open')");
+    }
+
+    private void HideCancelModal()
+    {
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('cancelModal').classList.remove('show')");
+        JSRuntime.InvokeVoidAsync("eval", "document.getElementById('cancelModal').style.display = 'none'");
+        JSRuntime.InvokeVoidAsync("eval", "document.body.classList.remove('modal-open')");
+    }
+
+    private void HandleConfirmCancel()
+    {
+        email = new Email();
+        HideCancelModal();
+    }
+}

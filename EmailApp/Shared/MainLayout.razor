@@ -1,19 +1,19 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>EmailApp</PageTitle>
-
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-2 col-lg-2 d-md-block navbar-blue sidebar">
+            <div class="sidebar-sticky">
+                <div class="text-center my-3">
+                    <h1 class="text-white" style="font-size: 2rem;">EmailApp</h1>
+                </div>
+                <NavMenu />
+            </div>
+        </nav>
+        <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
+            <div class="pt-3">
+                @Body
+            </div>
+        </main>
     </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
 </div>

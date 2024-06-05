@@ -1,0 +1,43 @@
+﻿@using Microsoft.AspNetCore.Components
+
+@if (TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                <button class="page-link" @onclick="() => SetPage(CurrentPage - 1)">Previous</button>
+            </li>
+            @for (int i = 1; i <= TotalPages; i++)
+            {
+                <li class="page-item @(CurrentPage == i ? "active" : "")">
+                    <button class="page-link" @onclick="() => SetPage(i)">@i</button>
+                </li>
+            }
+            <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                <button class="page-link" @onclick="() => SetPage(CurrentPage + 1)">Next</button>
+            </li>
+        </ul>
+    </nav>
+}
+
+@code {
+    [Parameter]
+    public int TotalItems { get; set; }
+    [Parameter]
+    public int ItemsPerPage { get; set; }
+    [Parameter]
+    public int CurrentPage { get; set; }
+    [Parameter]
+    public EventCallback<int> OnPageChanged { get; set; }
+
+    private int TotalPages => (int)Math.Ceiling((double)TotalItems / ItemsPerPage);
+
+    private async Task SetPage(int pageNumber)
+    {
+        if (pageNumber != CurrentPage && pageNumber > 0 && pageNumber <= TotalPages)
+        {
+            CurrentPage = pageNumber;
+            await OnPageChanged.InvokeAsync(pageNumber);
+        }
+    }
+}
