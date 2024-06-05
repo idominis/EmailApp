@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using EmailApp.Models
 @using EmailApp.Services
+@using Microsoft.Extensions.Options
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 
@@ -99,6 +100,10 @@
     private Email email = new Email();
     private string additionalError;
 
+    // Inject IOptions<EmailSettings>
+    [Inject]
+    private IOptions<EmailSettings> EmailSettings { get; set; }
+
     private async Task HandleValidSubmit()
     {
         // Clear previous errors
@@ -129,14 +134,14 @@
 
     private bool IsValidDomain(string email)
     {
-        var allowedDomains = new[] { "example.com", "anotherdomain.com" }; // Add allowed domains here
+        var allowedDomains = EmailSettings.Value.AllowedDomains;
         var domain = email.Split('@')[1];
         return allowedDomains.Contains(domain);
     }
 
     private bool ContainsBlacklistedWords(string text)
     {
-        var blacklistedWords = new[] { "spam", "phishing", "banned" }; // Add blacklisted words here
+        var blacklistedWords = EmailSettings.Value.BlacklistedWords;
         return blacklistedWords.Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
     }
 

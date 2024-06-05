@@ -1,6 +1,7 @@
 ﻿@page "/email-history/{pageNumber:int?}"
 @using EmailApp.Models
 @using EmailApp.Services
+@using Microsoft.Extensions.Options
 @inject IEmailService EmailService
 @inject IJSRuntime JSRuntime
 
@@ -69,13 +70,19 @@ else
     private List<Email> paginatedEmails;
     private Email selectedEmail;
     private int CurrentPage = 1;
-    private const int ItemsPerPage = 3;
+    private int ItemsPerPage;
 
     [Parameter]
     public int? PageNumber { get; set; }
 
+    // Inject IOptions<EmailSettings>
+    [Inject]
+    private IOptions<EmailSettings> EmailSettings { get; set; }
+
     protected override async Task OnParametersSetAsync()
     {
+        ItemsPerPage = EmailSettings.Value.ItemsPerPage;
+
         if (PageNumber.HasValue)
         {
             CurrentPage = PageNumber.Value;
