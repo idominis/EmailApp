@@ -3,7 +3,9 @@
 @using System.ComponentModel.DataAnnotations
 @using EmailApp.Models
 @using EmailApp.Services
+@using EmailApp.Enums
 @using Microsoft.Extensions.Options
+@using System.Text.Json
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 
@@ -37,8 +39,8 @@
     <div class="form-group row">
         <label for="ccEmails" class="col-sm-2 col-form-label">CC:</label>
         <div class="col-sm-10">
-            <InputText id="ccEmails" class="form-control" @bind-Value="email.CcEmails" placeholder="Separate emails with a comma" />
-            <ValidationMessage For="@(() => email.CcEmails)" class="text-danger" />
+            <InputText id="ccEmails" class="form-control" @bind-Value="ccEmails" placeholder="Separate emails with a comma" />
+            <ValidationMessage For="@(() => ccEmails)" class="text-danger" />
         </div>
     </div>
     <div class="form-group row">
@@ -52,9 +54,10 @@
         <label for="importance" class="col-sm-2 col-form-label">Importance:</label>
         <div class="col-sm-10">
             <InputSelect id="importance" class="form-control" @bind-Value="email.Importance">
-                <option value="Low">Low</option>
-                <option value="Normal">Normal</option>
-                <option value="High">High</option>
+                @foreach (var importance in Enum.GetValues(typeof(Importance)).Cast<Importance>())
+                {
+                    <option value="@importance">@importance</option>
+                }
             </InputSelect>
             <ValidationMessage For="@(() => email.Importance)" class="text-danger" />
         </div>
@@ -99,6 +102,7 @@
 @code {
     private Email email = new Email();
     private string? additionalError;
+    private string? ccEmails; // Temporary storage for comma-separated input
 
     // Inject IOptions<EmailSettings>
     [Inject]
@@ -106,30 +110,41 @@
 
     private async Task HandleValidSubmit()
     {
-        // Clear previous errors
-        additionalError = null;
-
-        // Additional validations
-        if (!IsValidDomain(email.FromEmail) || !IsValidDomain(email.ToEmail))
+        try
         {
-            additionalError = "Invalid domain in email address.";
-            return;
-        }
+            // Clear previous errors
+            additionalError = null;
 
-        if (ContainsBlacklistedWords(email.Subject) || ContainsBlacklistedWords(email.Content))
+            // Convert ccEmails from string to list
+            email.CcEmails = ccEmails?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(e => e.Trim()).ToList();
+
+            // Additional validations
+            if (!IsValidDomain(email.FromEmail) || !IsValidDomain(email.ToEmail))
+            {
+                additionalError = "Invalid domain in email address.";
+                return;
+            }
+
+            if (ContainsBlacklistedWords(email.Subject) || ContainsBlacklistedWords(email.Content))
+            {
+                additionalError = "The email contains prohibited words.";
+                return;
+            }
+
+            if (HasDuplicateEmails(email.FromEmail, email.ToEmail, email.CcEmails))
+            {
+                additionalError = "The same email address cannot be used in From, To, or CC fields.";
+                return;
+            }
+
+            await EmailService.CreateEmailAsync(email);
+            Navigation.NavigateTo("/email-history");
+        }
+        catch (Exception ex)
         {
-            additionalError = "The email contains prohibited words.";
-            return;
+            var errorContent = JsonSerializer.Serialize(new { error = "An unexpected error occurred. Please try again later.", details = ex.Message });
+            await JSRuntime.InvokeVoidAsync("downloadErrorFile", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(errorContent)));
         }
-
-        if (HasDuplicateEmails(email.FromEmail, email.ToEmail, email.CcEmails))
-        {
-            additionalError = "The same email address cannot be used in From, To, or CC fields.";
-            return;
-        }
-
-        await EmailService.CreateEmailAsync(email);
-        Navigation.NavigateTo("/email-history");
     }
 
     private bool IsValidDomain(string email)
@@ -150,12 +165,12 @@
         return blacklistedWords.Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
     }
 
-    private bool HasDuplicateEmails(string from, string to, string cc)
+    private bool HasDuplicateEmails(string from, string to, List<string>? cc)
     {
         var emailAddresses = new List<string> { from, to };
-        if (!string.IsNullOrEmpty(cc))
+        if (cc != null && cc.Any())
         {
-            emailAddresses.AddRange(cc.Split(',').Select(email => email.Trim()));
+            emailAddresses.AddRange(cc);
         }
 
         var distinctEmails = emailAddresses.Distinct().ToList();

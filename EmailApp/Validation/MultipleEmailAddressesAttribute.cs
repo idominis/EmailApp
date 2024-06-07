@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
@@ -13,26 +13,22 @@ namespace EmailApp.Validation
                 return true; // Consider null as valid; use [Required] for mandatory fields
             }
 
-            var valueString = value.ToString();
-            if (valueString == null)
+            if (value is List<string> emailList)
             {
-                return false;
-            }
+                var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$"); // Simplified regex for example
 
-            var emails = valueString.Split(',');
-            var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$"); // Simplified regex for example
-
-            foreach (var email in emails)
-            {
-                if (!regex.IsMatch(email.Trim()))
+                foreach (var email in emailList)
                 {
-                    return false;
+                    if (!regex.IsMatch(email.Trim()))
+                    {
+                        return false;
+                    }
                 }
+                return true;
             }
 
-            return true;
+            return false;
         }
-
 
         public override string FormatErrorMessage(string name)
         {

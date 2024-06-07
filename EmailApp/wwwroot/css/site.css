@@ -95,3 +95,9 @@ header.bg-light {
 header .navbar-brand {
     font-size: 4.5rem; /* Increase font size */
 }
+
+.modal-body p {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}

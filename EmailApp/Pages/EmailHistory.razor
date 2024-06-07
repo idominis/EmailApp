@@ -7,13 +7,19 @@
 
 <h3>Email History</h3>
 
-@if (emails == null)
+@if (isLoading)
 {
     <div class="alert alert-info" role="alert">
         Loading...
     </div>
 }
-else if (emails.Count == 0)
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+else if (emails == null || emails.Count == 0)
 {
     <div class="alert alert-warning" role="alert">
         No emails found.
@@ -51,9 +57,9 @@ else
                 {
                     <p><strong>From:</strong> @selectedEmail.FromEmail</p>
                     <p><strong>To:</strong> @selectedEmail.ToEmail</p>
-                    @if (!string.IsNullOrEmpty(selectedEmail.CcEmails))
+                    @if (selectedEmail.CcEmails != null && selectedEmail.CcEmails.Any())
                     {
-                        <p><strong>CC:</strong> @selectedEmail.CcEmails</p>
+                        <p><strong>CC:</strong> @string.Join(", ", selectedEmail.CcEmails)</p>
                     }
                     <p><strong>Subject:</strong> @selectedEmail.Subject</p>
                     <p><strong>Importance:</strong> @selectedEmail.Importance</p>
@@ -74,6 +80,8 @@ else
     private Email? selectedEmail;
     private int CurrentPage = 1;
     private int ItemsPerPage;
+    private bool isLoading = true;
+    private string? errorMessage;
 
     [Parameter]
     public int? PageNumber { get; set; }
@@ -83,6 +91,9 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        isLoading = true;
+        errorMessage = null;
+
         ItemsPerPage = EmailSettings?.Value.ItemsPerPage ?? default;
 
         if (PageNumber.HasValue)
@@ -94,8 +105,20 @@ else
             CurrentPage = 1;
         }
 
-        emails = await EmailService.GetEmailsAsync();
-        PaginateEmails();
+        try
+        {
+            emails = await EmailService.GetEmailsAsync();
+            PaginateEmails();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading emails. Please try again later. Error Details: {ex.Message}";
+        }
+
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private void PaginateEmails()

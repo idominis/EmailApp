@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using EmailApp.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,19 +23,21 @@ public partial class EmailDbContext : DbContext
         {
             entity.HasKey(e => e.EmailId).HasName("PK_dbo_EmailId");
 
-            entity.Property(e => e.CcEmails).HasMaxLength(255);
+            entity.Property(e => e.CcEmails)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions)null),
+                    v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null))
+                .HasMaxLength(255);
+
             entity.Property(e => e.Content)
                 .IsRequired()
                 .HasColumnType("ntext");
             entity.Property(e => e.CreatedDate)
                 .HasColumnType("datetime")
-                .HasColumnName("CreatedDate ");
+                .HasColumnName("CreatedDate");
             entity.Property(e => e.FromEmail)
                 .IsRequired()
                 .HasMaxLength(255);
-            entity.Property(e => e.Importance)
-                .IsRequired()
-                .HasMaxLength(50);
             entity.Property(e => e.Subject)
                 .IsRequired()
                 .HasMaxLength(255);
