@@ -57,7 +57,7 @@ else
                 {
                     <p><strong>From:</strong> @selectedEmail.FromEmail</p>
                     <p><strong>To:</strong> @selectedEmail.ToEmail</p>
-                    @if (selectedEmail.CcEmails.Any())
+                    @if (selectedEmail.CcEmails != null && selectedEmail.CcEmails.Any())
                     {
                         <p><strong>CC:</strong> @string.Join(", ", selectedEmail.CcEmails)</p>
                     }
@@ -112,8 +112,9 @@ else
         }
         catch (Exception ex)
         {
-            errorMessage = "Error loading emails. Please try again later.";
+            errorMessage = $"Error loading emails. Please try again later. Error Details: {ex.Message}";
         }
+
         finally
         {
             isLoading = false;

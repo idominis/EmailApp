@@ -5,6 +5,7 @@ using EmailApp.Validation;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace EmailApp.Models;
 
@@ -21,7 +22,7 @@ public partial class Email
     public string ToEmail { get; set; }
 
     [MultipleEmailAddresses]
-    public string CcEmails { get; set; }
+    public List<string> CcEmails { get; set; } = new List<string>();
 
     [Required]
     [StringLength(100, ErrorMessage = "Subject length can't be more than 100 characters.")]

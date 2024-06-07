@@ -39,8 +39,8 @@
     <div class="form-group row">
         <label for="ccEmails" class="col-sm-2 col-form-label">CC:</label>
         <div class="col-sm-10">
-            <InputText id="ccEmails" class="form-control" @bind-Value="email.CcEmails" placeholder="Separate emails with a comma" />
-            <ValidationMessage For="@(() => email.CcEmails)" class="text-danger" />
+            <InputText id="ccEmails" class="form-control" @bind-Value="ccEmails" placeholder="Separate emails with a comma" />
+            <ValidationMessage For="@(() => ccEmails)" class="text-danger" />
         </div>
     </div>
     <div class="form-group row">
@@ -102,6 +102,7 @@
 @code {
     private Email email = new Email();
     private string? additionalError;
+    private string? ccEmails; // Temporary storage for comma-separated input
 
     // Inject IOptions<EmailSettings>
     [Inject]
@@ -113,6 +114,9 @@
         {
             // Clear previous errors
             additionalError = null;
+
+            // Convert ccEmails from string to list
+            email.CcEmails = ccEmails?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(e => e.Trim()).ToList();
 
             // Additional validations
             if (!IsValidDomain(email.FromEmail) || !IsValidDomain(email.ToEmail))
@@ -161,12 +165,12 @@
         return blacklistedWords.Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
     }
 
-    private bool HasDuplicateEmails(string from, string to, string cc)
+    private bool HasDuplicateEmails(string from, string to, List<string>? cc)
     {
         var emailAddresses = new List<string> { from, to };
-        if (!string.IsNullOrEmpty(cc))
+        if (cc != null && cc.Any())
         {
-            emailAddresses.AddRange(cc.Split(',').Select(email => email.Trim()));
+            emailAddresses.AddRange(cc);
         }
 
         var distinctEmails = emailAddresses.Distinct().ToList();
