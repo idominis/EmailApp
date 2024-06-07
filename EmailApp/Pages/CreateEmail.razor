@@ -4,6 +4,7 @@
 @using EmailApp.Models
 @using EmailApp.Services
 @using Microsoft.Extensions.Options
+@using System.Text.Json
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 
@@ -106,30 +107,41 @@
 
     private async Task HandleValidSubmit()
     {
-        // Clear previous errors
-        additionalError = null;
-
-        // Additional validations
-        if (!IsValidDomain(email.FromEmail) || !IsValidDomain(email.ToEmail))
+        try
         {
-            additionalError = "Invalid domain in email address.";
-            return;
-        }
+            // Introduce an intentional exception to test error handling
+            //throw new InvalidOperationException("This is a test exception.");
 
-        if (ContainsBlacklistedWords(email.Subject) || ContainsBlacklistedWords(email.Content))
+            // Clear previous errors
+            additionalError = null;
+
+            // Additional validations
+            if (!IsValidDomain(email.FromEmail) || !IsValidDomain(email.ToEmail))
+            {
+                additionalError = "Invalid domain in email address.";
+                return;
+            }
+
+            if (ContainsBlacklistedWords(email.Subject) || ContainsBlacklistedWords(email.Content))
+            {
+                additionalError = "The email contains prohibited words.";
+                return;
+            }
+
+            if (HasDuplicateEmails(email.FromEmail, email.ToEmail, email.CcEmails))
+            {
+                additionalError = "The same email address cannot be used in From, To, or CC fields.";
+                return;
+            }
+
+            await EmailService.CreateEmailAsync(email);
+            Navigation.NavigateTo("/email-history");
+        }
+        catch (Exception ex)
         {
-            additionalError = "The email contains prohibited words.";
-            return;
+            var errorContent = JsonSerializer.Serialize(new { error = "An unexpected error occurred. Please try again later.", details = ex.Message });
+            await JSRuntime.InvokeVoidAsync("downloadErrorFile", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(errorContent)));
         }
-
-        if (HasDuplicateEmails(email.FromEmail, email.ToEmail, email.CcEmails))
-        {
-            additionalError = "The same email address cannot be used in From, To, or CC fields.";
-            return;
-        }
-
-        await EmailService.CreateEmailAsync(email);
-        Navigation.NavigateTo("/email-history");
     }
 
     private bool IsValidDomain(string email)

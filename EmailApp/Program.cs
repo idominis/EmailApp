@@ -4,9 +4,9 @@ using EmailApp.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +32,6 @@ Log.Logger = new LoggerConfiguration()
     //.WriteTo.File("C:\\Logs\\EmailApp.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
-
 builder.Host.UseSerilog();
 
 var app = builder.Build();
@@ -50,6 +49,40 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSerilogRequestLogging();
+
+// Custom error handling middleware
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "An unhandled exception occurred.");
+
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+
+        var response = new { error = "An unexpected error occurred. Please try again later.", details = ex.Message };
+        var json = JsonSerializer.Serialize(response);
+
+        // Set a custom header to indicate that an error occurred
+        context.Response.Headers["X-Error"] = "true";
+        context.Response.Headers["X-Error-Content"] = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+
+        await context.Response.WriteAsync(json);
+    }
+});
+
+
+
+
+
+
+
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
