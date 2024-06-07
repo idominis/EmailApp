@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using EmailApp.Models
 @using EmailApp.Services
+@using EmailApp.Enums
 @using Microsoft.Extensions.Options
 @using System.Text.Json
 @inject IJSRuntime JSRuntime
@@ -53,9 +54,10 @@
         <label for="importance" class="col-sm-2 col-form-label">Importance:</label>
         <div class="col-sm-10">
             <InputSelect id="importance" class="form-control" @bind-Value="email.Importance">
-                <option value="Low">Low</option>
-                <option value="Normal">Normal</option>
-                <option value="High">High</option>
+                @foreach (var importance in Enum.GetValues(typeof(Importance)).Cast<Importance>())
+                {
+                    <option value="@importance">@importance</option>
+                }
             </InputSelect>
             <ValidationMessage For="@(() => email.Importance)" class="text-danger" />
         </div>
@@ -109,9 +111,6 @@
     {
         try
         {
-            // Introduce an intentional exception to test error handling
-            //throw new InvalidOperationException("This is a test exception.");
-
             // Clear previous errors
             additionalError = null;
 

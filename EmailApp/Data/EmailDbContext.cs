@@ -32,9 +32,6 @@ public partial class EmailDbContext : DbContext
             entity.Property(e => e.FromEmail)
                 .IsRequired()
                 .HasMaxLength(255);
-            entity.Property(e => e.Importance)
-                .IsRequired()
-                .HasMaxLength(50);
             entity.Property(e => e.Subject)
                 .IsRequired()
                 .HasMaxLength(255);

@@ -14,7 +14,7 @@ CREATE TABLE [dbo].[Emails](
 	[ToEmail] [nvarchar](255) NOT NULL,
 	[CcEmails] [nvarchar](255) NULL,
 	[Subject] [nvarchar](255) NOT NULL,
-	[Importance] [nvarchar] (50) NOT NULL,
+	[Importance] [int] NOT NULL,
 	[Content] [ntext] NOT NULL,
 	[CreatedDate ] [datetime] NOT NULL,
  CONSTRAINT [PK_dbo_EmailId] PRIMARY KEY CLUSTERED 
